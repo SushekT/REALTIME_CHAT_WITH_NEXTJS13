@@ -9,13 +9,14 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { email: emailToAdd } = addFriendValidator.parse(body.email);
-    console.log(emailToAdd, 'emailtoadd')
 
     const idToAdd = await fetchRedis('get', `user:email:${emailToAdd}`) as string
 
     if (!idToAdd) {
         return new Response('This account does not exist.', { status: 400 })
     }
+
+    console.log('done', idToAdd)
 
     const session = await getServerSession(authOptions)
     // UnAuthorized Access
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
     // valid request, i.e. sending friend request
 
     db.sadd(`user:${idToAdd}:incoming_friend_requests`, session.user.id)
+
     return new Response('ok')
 
   } catch (error) {
