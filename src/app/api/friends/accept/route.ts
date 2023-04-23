@@ -8,10 +8,6 @@ import { z } from "zod";
 
 export async function POST(req: Request) {
   try {
-<<<<<<< HEAD
-=======
-    
->>>>>>> 99fc35676190aa296d7724262947629a81c49892
     const body = await req.json();
     const { id: idToAdd } = z.object({ id: z.string() }).parse(body);
     const session = await getServerSession(authOptions);
