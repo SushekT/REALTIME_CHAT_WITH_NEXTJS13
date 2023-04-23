@@ -14,7 +14,9 @@ interface pageProps {}
 const page = async ({}) => {
   const session = await getServerSession(authOptions);
   if (!session) notFound();
+
   const friends = await getFriendsByUserId(session.user.id);
+
   const friendsWithLastMessage = await Promise.all(
     friends.map(async (friend) => {
       const [lastMessageRaw] = (await fetchRedis(
@@ -23,8 +25,26 @@ const page = async ({}) => {
         -1,
         -1
       )) as string[];
-      const lastMessage = JSON.parse(lastMessageRaw) as Message
-      return { ...friend, lastMessage };
+
+      let lastMessage: Message = {
+        id: "",
+        senderID: "",
+        receiverID: "",
+        text: "",
+        timestamp: null,
+      };
+      
+      if (lastMessageRaw) {
+        lastMessage = JSON.parse(lastMessageRaw) as Message;
+      }
+      
+
+      
+
+      return {
+        ...friend,
+        lastMessage,
+      };
     })
   );
   return (
@@ -34,7 +54,8 @@ const page = async ({}) => {
         <p className="text-sm text-zinc-500"> No Messages</p>
       ) : (
         friendsWithLastMessage.map((friend) => (
-          <div
+          friend.lastMessage.text != '' ? (
+            <div
             key={friend.id}
             className="relative bg-zinc-50 border border-zinc-200 p-3 rounded-md"
           >
@@ -72,6 +93,9 @@ const page = async ({}) => {
               </div>
             </Link>
           </div>
+
+          ) : ''
+          
         ))
       )}
     </div>
