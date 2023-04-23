@@ -25,7 +25,6 @@ async function getChatMessages(chatId: string) {
     );
 
     const dbMessages = results.map((message) => JSON.parse(message) as Message);
-    console.log(dbMessages, 'dbmessage')
     const reversedDbMessages = dbMessages.reverse();
 
     const messages = messageArrayValidator.parse(reversedDbMessages);
@@ -52,7 +51,6 @@ const page = async ({ params }: PageProps) => {
   const chatPartnerId = user.id === userId1 ? userId2 : userId1;
   const chatPartner = (await db.get(`user:${chatPartnerId}`)) as User;
   const initialMessages = await getChatMessages(chatId)
-  console.log(chatId)
 
   return (
     <div className="flex-1 justify-between flex flex-col h-full max-h-[calc(100vh-6rem)]">

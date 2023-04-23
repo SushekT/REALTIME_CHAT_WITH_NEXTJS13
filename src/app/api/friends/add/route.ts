@@ -21,8 +21,6 @@ export async function POST(req: Request) {
       return new Response("This account does not exist.", { status: 400 });
     }
 
-    console.log("done", idToAdd);
-
     const session = await getServerSession(authOptions);
     // UnAuthorized Access
 

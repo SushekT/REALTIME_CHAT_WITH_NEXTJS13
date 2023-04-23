@@ -35,9 +35,8 @@ const SidebarChatList: FC<SidebarChatListProps> = ({ friends, sessionId }) => {
         pathname !==
         `/dashboard/chat/${chatHrefConstructor(sessionId, message.senderID)}`;
 
-      if (!shouldNotify) {
-        return;
-      }
+      if (!shouldNotify) return;
+     
       //should be notified
       toast.custom((t) => (
         //custom toast component
