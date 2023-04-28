@@ -1,39 +1,70 @@
 "use client";
+import { pusherClient, pusherServer } from "@/lib/pusher";
+import { toPusherKey } from "@/lib/utils";
 import axios from "axios";
-import { FC, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import TextareaAutosize from "react-textarea-autosize";
 import Button from "./ui/Button";
 
 interface ChatInputProps {
-  chatPartner: User
-  chatId: string
+  chatPartner: User;
+  chatId: string;
+  meUserId: string;
 }
 
-const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
+const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId, meUserId }) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [input, setInput] = useState<string>("");
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+
+  useEffect(() => {
+    pusherClient.subscribe(toPusherKey(`isTyping:${meUserId}`));
+    console.log(meUserId)
+
+    const typeHandler = (data: { isTypingNow: boolean }) => {
+        setIsTyping(data.isTypingNow);
+    };
+
+    pusherClient.bind("isTypingMessage", typeHandler);
+
+    return () => {
+      pusherClient.unbind("isTypingMessage", typeHandler);
+      pusherClient.unsubscribe(`isTyping:${meUserId}`);
+    };
+  }, [isTyping, meUserId]);
 
   const sendMessage = async () => {
-    if (!input) return
+    if (!input) return;
     setIsLoading(true);
 
-    try{
-        
-        await axios.post('/api/message/send', { text: input, chatId })
-        setInput('')
-        textareaRef.current?.focus()
-    }catch(error){
-        toast.error('Something went wrong. Please try again later')
-    }finally{
-        setIsLoading(false)
+    try {
+      await axios.post("/api/message/send", { text: input, chatId, isTyping });
+      setInput("");
+      setIsTyping(false);
+      textareaRef.current?.focus();
+    } catch (error) {
+      toast.error("Something went wrong. Please try again later");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const typeChanging = async () => {
+    try {
+      await axios.post("/api/message/typing", { text: input, chatPartner });
+    } catch (error) {
+      toast.error("Something went wrong. Please try again later");
     }
   };
 
   return (
     <div className="border-1 border-gray-200 px-4 pt-2 mb-2 sm:mb-0">
-      <div className="relative flex-1 overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600">
+      <div
+        className="relative flex-1 overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600"
+        onChange={typeChanging}
+      >
         <TextareaAutosize
           ref={textareaRef}
           onKeyDown={(e) => {
@@ -65,6 +96,13 @@ const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
           </div>
         </div>
       </div>
+      {isTyping ? (
+        <div className="text-sm italic text-gray-500">
+          <p>Typing......</p>
+        </div>
+      ) : (
+        ""
+      )}
     </div>
   );
 };
