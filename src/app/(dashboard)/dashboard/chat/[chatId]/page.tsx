@@ -88,7 +88,7 @@ const page = async ({ params }: PageProps) => {
         sessionImg={session.user.image}
         chatId={chatId}
       />
-      <ChatInput chatPartner={chatPartner} chatId={chatId} />
+      <ChatInput chatPartner={chatPartner} chatId={chatId} meUserId={user.id} />
     </div>
   );
 };
